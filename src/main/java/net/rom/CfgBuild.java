@@ -9,6 +9,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.ParameterizedType;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
 
 import org.slf4j.Logger;
@@ -23,18 +24,18 @@ import net.rom.types.CfgString;
 import net.rom.types.CfgStringArray;
 
 public class CfgBuild {
-	private final File configFile;
-	private final CfgProperties properties;
-	private final Class<?> configclass;
-	private final Map<Class<?>, CfgParser<?>> cParsers = new HashMap<>();
-
+	private final transient CfgProperties properties;
+	private final transient Class<?> configclass;
+	private final transient Map<Class<?>, CfgParser<?>> cParsers = new HashMap<>();
 	public static final Logger LOG = (Logger) LoggerFactory.getLogger(CfgBuild.class);
 
-	public CfgBuild(Class<?> configclass, File configFile) {
-		this.configFile = configFile;
+	public CfgBuild(Class<?> configclass, File configFile) throws Exception {
 		this.configclass = configclass;
 		this.properties = new CfgProperties();
-		loadParsers();
+		if (!configFile.exists())
+			make(configFile);
+		else
+			loadParsers();
 	}
 
 	/**
@@ -73,13 +74,12 @@ public class CfgBuild {
 	 * @param cleanfile clear the File of all undefined variables
 	 * @throws IOException file can't be accessed
 	 */
-	public void build(boolean cleanfile) throws Exception {
+	private void make(File configFile) throws Exception {
 		if (configFile == null)
 			throw new IllegalStateException("File not initialized");
 		if (configFile.exists()) {
 			properties.load(new FileInputStream(configFile));
 		}
-		CfgProperties cleanProperties = new CfgProperties();
 		for (Field field : configclass.getDeclaredFields()) {
 			if (!field.isAnnotationPresent(Cfg.class)) {
 				continue;
@@ -89,34 +89,22 @@ public class CfgBuild {
 				if (isPrivate) {
 					field.setAccessible(true);
 				}
-				String variableName = field.getName().toLowerCase();
-				Object defaultValue = field.get(null);
-				Object value = configFile.exists() ? properties.getOrDefault(variableName, defaultValue) : defaultValue;
-				try {
-					if (cParsers.containsKey(field.getType())) {
-						field.set(null, cParsers.get(field.getType()).parse(String.valueOf(value)));
-						properties.setProperty(variableName,
-								cParsers.get(field.getType()).toStringValue(field.get(null)));
-						cleanProperties.setProperty(variableName, properties.getProperty(variableName));
-					}
-				} catch (Exception e) {
-					LOG.error("Unknown Configuration Type. Variable name: '" + field.getName() + "'; Unknown Class: "
-							+ field.getType().getName());
-				}
 
+				if (cParsers.containsKey(field.getType())) {
+					String variableName = field.getName().toLowerCase(Locale.ROOT);
+					field.set(null, cParsers.get(field.getType())
+							.parse(String.valueOf(properties.getOrDefault(variableName, ""))));
+					properties.setProperty(variableName, cParsers.get(field.getType()).toStringValue(field.get(null)));
+				}
 				if (isPrivate) {
 					field.setAccessible(false);
 				}
-
 			} catch (IllegalAccessException e) {
 				LOG.error("Could not load configuration, IllegalAccessException", e.getCause());
 			} catch (Exception e) {
 				LOG.error("Could not load configuration, GenericExemption", e.getCause());
 			}
-		}
-		if (cleanfile) {
-			cleanProperties.store(new FileOutputStream(configFile), null);
-		} else {
+
 			properties.store(new FileOutputStream(configFile), null);
 		}
 	}
