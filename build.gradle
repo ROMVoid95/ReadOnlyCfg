@@ -46,3 +46,13 @@ pmd {
     rulePriority = 5
     ruleSets = ["category/java/errorprone.xml", "category/java/bestpractices.xml"]
 }
+
+release {
+	buildTasks = ['build', 'shadowJar']
+	pushReleaseVersionBranch = true
+	git {
+        requireBranch = 'release'
+        pushToRemote = 'origin'
+        signTag = true
+    }
+}
