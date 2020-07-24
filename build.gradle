@@ -1,7 +1,7 @@
 plugins {
     id 'pmd'
     id 'java'
-    id 'maven'
+    id 'maven-publish'
     id 'eclipse'
     id 'net.researchgate.release' version '2.8.1'
     id 'com.github.johnrengelman.shadow' version '6.0.0'
