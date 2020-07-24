@@ -1,7 +1,0 @@
-jdk:
-  - openjdk8
-before_install:
-   - chmod +x ./gradlew
-   - ./gradlew build publish
-install:
-   - ./gradlew install 
