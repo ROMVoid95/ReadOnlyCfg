@@ -1,6 +1,6 @@
 jdk:
   - openjdk8
 before_install:
-   - ./gradlew shadowJar
+   - ./gradlew build publish
 install:
-   - ./gradlew install
+   - ./gradlew install 
