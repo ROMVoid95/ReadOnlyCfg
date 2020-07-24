@@ -51,7 +51,7 @@ release {
 	buildTasks = ['build', 'shadowJar']
 	pushReleaseVersionBranch = true
 	git {
-        requireBranch = 'release'
+        requireBranch = 'master'
         pushToRemote = 'origin'
         signTag = true
     }
