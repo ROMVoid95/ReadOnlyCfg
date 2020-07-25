@@ -1,18 +1,15 @@
+import org.apache.tools.ant.filters.ReplaceTokens
+
 plugins {
-    id 'pmd'
-    id 'java'
+	id 'java'
     id 'maven-publish'
-    id 'eclipse'
-    id 'net.researchgate.release' version '2.8.1'
+    id 'com.github.ben-manes.versions' version '0.29.0'
     id 'com.github.johnrengelman.shadow' version '6.0.0'
 }
 
-group = "net.rom"
-	
-project.tasks.withType(JavaCompile) {
-	options.encoding = 'UTF-8'
-}
-    
+version = '1.0.0'
+group = 'net.rom'
+
 repositories {
 	mavenCentral()
 	jcenter()
@@ -24,35 +21,39 @@ dependencies {
 
 	// https://mvnrepository.com/artifact/ch.qos.logback/logback-classic
 	compile group: 'ch.qos.logback', name: 'logback-classic', version: '1.2.3'
-
-	// https://mvnrepository.com/artifact/org.junit.jupiter/junit-jupiter-api
-	testCompile group: 'org.junit.jupiter', name: 'junit-jupiter-api', version: '5.6.2'
 }
 
-test {
-    useJUnitPlatform()
+project.tasks.withType(JavaCompile) {
+	options.encoding = 'UTF-8'
 }
 
-shadowJar {
-    archiveClassifier = ''
-}
-
-build.finalizedBy shadowJar
-jar.enabled = false
-
-pmd {
-    consoleOutput = true
-    toolVersion = "6.21.0"
-    rulePriority = 5
-    ruleSets = ["category/java/errorprone.xml", "category/java/bestpractices.xml"]
-}
-
-release {
-	buildTasks = ['build', 'shadowJar']
-	pushReleaseVersionBranch = true
-	git {
-        requireBranch = 'master'
-        pushToRemote = 'origin'
-        signTag = true
-    }
+publishing {
+	publications {
+		Exoplanets(MavenPublication) {
+			artifactId 'ReadOnlyCfg'
+			groupId project.group
+			version project.version
+			from components.java
+			pom {
+				name = "ReadOnlyCfg"
+				description = "Easy Configurations for Your Discord Bots"
+				url = "https://github.com/ROMVoid95/ReadOnlyCfg"
+				packaging = 'jar'
+				inceptionYear = '2020'
+				developers {
+					developer {
+						id = "ROMVoid95"
+						name = "ROM"
+						email = "rom@romvoid.dev"
+					}
+				}
+			}
+		}
+	}
+	repositories {
+		maven {
+			name = "LocalMaven"
+			url = "file://Z:/mvn.romvoid.dev"
+		}
+	}
 }
